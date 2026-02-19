@@ -17,6 +17,28 @@ from pydantic import BaseModel, Field
 from langgraph_service.config import settings
 from langgraph_service.graph import app_graph
 
+# ── Observability (OpenTelemetry) ────────────────────
+if settings.azure_app_insights_connection_string:
+    try:
+        from azure.monitor.opentelemetry.exporter import AzureMonitorTraceExporter
+        from opentelemetry import trace
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+        from opentelemetry.instrumentation.langchain import LangchainInstrumentor
+        from opentelemetry.sdk.trace import TracerProvider
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+        provider = TracerProvider()
+        exporter = AzureMonitorTraceExporter(
+            connection_string=settings.azure_app_insights_connection_string
+        )
+        provider.add_span_processor(BatchSpanProcessor(exporter))
+        trace.set_tracer_provider(provider)
+        LangchainInstrumentor().instrument()
+        logging.getLogger(__name__).info("✅ OpenTelemetry initialized with Azure Monitor")
+    except Exception as e:
+        logging.getLogger(__name__).error("❌ Failed to initialize OpenTelemetry: %s", e)
+
+
 # ── Logging setup ────────────────────────────────────
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper(), logging.INFO),
@@ -34,7 +56,14 @@ async def lifespan(app: FastAPI):
     logger.info("  Azure OpenAI: %s", "✅ configured" if settings.azure_openai_configured else "❌ not configured")
     logger.info("  Azure Search: %s", "✅ configured" if settings.azure_search_configured else "❌ not configured")
     logger.info("  Databricks:   %s", "✅ configured" if settings.databricks_configured else "❌ not configured")
-    logger.info("  LangSmith:    %s", "✅ enabled" if settings.langsmith_configured else "❌ disabled")
+    
+    if settings.azure_app_insights_connection_string:
+         logger.info("  Observability:✅ Azure Monitor (OpenTelemetry)")
+    elif settings.langsmith_configured:
+         logger.info("  Observability:✅ LangSmith (SaaS)")
+    else:
+         logger.info("  Observability:❌ Disabled")
+
     yield
     logger.info("👋 Shutting down...")
 
@@ -46,6 +75,13 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+if settings.azure_app_insights_connection_string:
+    try:
+        from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+        FastAPIInstrumentor.instrument_app(app)
+    except ImportError:
+        pass
 
 
 # ── Request/Response models ──────────────────────────

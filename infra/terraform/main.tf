@@ -144,3 +144,30 @@ output "openai_key" {
   sensitive   = true
   description = "Azure OpenAI API key"
 }
+
+# ── Azure Application Insights (OpenTelemetry) ──────
+resource "azurerm_log_analytics_workspace" "poc" {
+  name                = "${var.resource_group_name}-logs"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.poc.name
+  sku                 = "PerGB2018"
+  retention_in_days   = 30
+  
+  tags = azurerm_resource_group.poc.tags
+}
+
+resource "azurerm_application_insights" "poc" {
+  name                = "${var.resource_group_name}-insights"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.poc.name
+  workspace_id        = azurerm_log_analytics_workspace.poc.id
+  application_type    = "other" # Optimized for OpenTelemetry
+
+  tags = azurerm_resource_group.poc.tags
+}
+
+output "app_insights_connection_string" {
+  value       = azurerm_application_insights.poc.connection_string
+  sensitive   = true
+  description = "Application Insights Connection String for OpenTelemetry"
+}

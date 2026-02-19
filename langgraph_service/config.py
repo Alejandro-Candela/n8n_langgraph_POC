@@ -35,8 +35,9 @@ class Settings(BaseSettings):
     databricks_vs_endpoint_name: str = ""
     databricks_vs_index_name: str = ""
 
-    # --- LangSmith ---
-    langsmith_api_key: str = ""
+    # --- Observability ---
+    azure_app_insights_connection_string: str | None = None
+    langsmith_api_key: str | None = None
     langsmith_project: str = "hybrid-knowledge-synthesizer"
     langchain_tracing_v2: bool = False
 
