@@ -1,0 +1,72 @@
+[
+    {
+        "id": "pat-001",
+        "title": "US-2024-0112233 - Neural Architecture for Low-Latency Audio Classification",
+        "content": "A neural network architecture optimized for real-time audio event detection on edge devices using depthwise separable convolutions with multi-head attention mechanisms. The architecture achieves 92% accuracy on the AudioSet benchmark while requiring only 1.2M parameters, enabling deployment on devices with as little as 256MB RAM. Key innovation: a novel frequency-band routing mechanism that selectively processes relevant spectral regions.",
+        "source": "USPTO",
+        "patent_id": "US-2024-0112233",
+        "filing_date": "2024-03-15",
+        "tags": [
+            "audio-classification",
+            "edge-computing",
+            "neural-network",
+            "attention"
+        ]
+    },
+    {
+        "id": "pat-002",
+        "title": "EP-3987654 - Distributed Feature Engineering Pipeline",
+        "content": "A system and method for distributed feature computation across heterogeneous data sources with automatic schema reconciliation. The system implements lazy materialization of feature vectors with configurable caching at the serving layer to minimize redundant computation during inference. Supports both batch and streaming feature computation with guaranteed consistency through a two-phase commit protocol.",
+        "source": "EPO",
+        "patent_id": "EP-3987654",
+        "filing_date": "2023-11-28",
+        "tags": [
+            "feature-engineering",
+            "distributed-systems",
+            "caching",
+            "data-pipeline"
+        ]
+    },
+    {
+        "id": "pat-003",
+        "title": "US-2023-0445567 - Adaptive Model Compression for Edge Deployment",
+        "content": "A method for dynamically compressing deep learning models based on target device capabilities. The system profiles hardware constraints (memory, compute, power budget) and applies optimal combinations of quantization, pruning, and knowledge distillation. Achieves up to 8x compression with less than 2% accuracy degradation across computer vision and NLP tasks.",
+        "source": "USPTO",
+        "patent_id": "US-2023-0445567",
+        "filing_date": "2023-08-22",
+        "tags": [
+            "model-compression",
+            "edge-deployment",
+            "quantization",
+            "pruning"
+        ]
+    },
+    {
+        "id": "pat-004",
+        "title": "WO-2024-019876 - Real-Time Data Quality Monitoring with Anomaly Detection",
+        "content": "An automated system for continuous data quality monitoring in production ML pipelines. Uses ensemble anomaly detection (Isolation Forest + Autoencoder) to identify data drift, schema violations, and distribution shifts in real-time. The system generates explainable alerts with root cause analysis and supports automated remediation actions including data quarantine and pipeline rollback.",
+        "source": "WIPO",
+        "patent_id": "WO-2024-019876",
+        "filing_date": "2024-01-10",
+        "tags": [
+            "data-quality",
+            "anomaly-detection",
+            "monitoring",
+            "mlops"
+        ]
+    },
+    {
+        "id": "pat-005",
+        "title": "US-2024-0334455 - Federated Learning with Differential Privacy for Industrial IoT",
+        "content": "A federated learning framework designed for industrial IoT environments that combines differential privacy guarantees with communication-efficient model updates. The system uses secure aggregation protocols and adaptive noise injection to protect sensitive manufacturing data while enabling collaborative model training across multiple factory sites. Achieves comparable accuracy to centralized training with provable privacy bounds (epsilon < 1.0).",
+        "source": "USPTO",
+        "patent_id": "US-2024-0334455",
+        "filing_date": "2024-05-03",
+        "tags": [
+            "federated-learning",
+            "differential-privacy",
+            "iot",
+            "manufacturing"
+        ]
+    }
+]

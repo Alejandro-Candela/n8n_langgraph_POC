@@ -1,0 +1,10 @@
+# ============================================
+# Terraform variables for POC
+# ============================================
+# Copy this file to poc.tfvars and fill in values.
+
+subscription_id     = "your-azure-subscription-id"
+location            = "swedencentral"
+resource_group_name = "rg-hybrid-poc"
+search_service_name = "hybrid-poc-search"     # Must be globally unique
+openai_account_name = "hybrid-poc-openai"     # Must be globally unique

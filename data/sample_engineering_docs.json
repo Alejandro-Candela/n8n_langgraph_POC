@@ -1,0 +1,62 @@
+[
+    {
+        "id": "eng-001",
+        "title": "ML Inference Pipeline Architecture v2.3",
+        "content": "The ML inference pipeline follows a three-stage architecture: pre-processing, model inference, and post-processing. Pre-processing handles feature normalization and input validation. Model inference uses a gRPC endpoint backed by TensorRT for sub-50ms p99 latency. Post-processing applies business rules and confidence thresholds before returning predictions. The pipeline is deployed on Kubernetes with horizontal pod autoscaling based on queue depth.",
+        "source": "internal-wiki/architecture",
+        "tags": [
+            "ml-pipeline",
+            "inference",
+            "architecture",
+            "kubernetes"
+        ]
+    },
+    {
+        "id": "eng-002",
+        "title": "Signal Processing Module - FFT Implementation",
+        "content": "The DSP module implements a custom FFT-based approach for real-time audio feature extraction. It supports sampling rates from 8kHz to 48kHz with configurable Hann window sizes (256, 512, 1024 samples). The module produces mel-frequency cepstral coefficients (MFCCs) and spectral centroid features. Integration with the ML pipeline occurs via Apache Kafka topics for streaming inference with <10ms additional latency.",
+        "source": "internal-wiki/dsp",
+        "tags": [
+            "signal-processing",
+            "fft",
+            "audio",
+            "kafka"
+        ]
+    },
+    {
+        "id": "eng-003",
+        "title": "Feature Store Design Document",
+        "content": "Our feature store uses a dual-layer architecture: an offline layer backed by Delta Lake on Databricks for batch feature computation, and an online layer using Redis for low-latency serving (<5ms p99). Features are defined as code using a custom DSL that generates both batch SQL and streaming computations. Feature versioning is managed through a metadata catalog with lineage tracking.",
+        "source": "internal-wiki/feature-store",
+        "tags": [
+            "feature-store",
+            "delta-lake",
+            "redis",
+            "mlops"
+        ]
+    },
+    {
+        "id": "eng-004",
+        "title": "Data Quality Framework Specification",
+        "content": "The data quality framework implements automated validation at three levels: schema validation (field types, nullability), statistical validation (distribution drift detection using KL-divergence), and business rule validation (domain-specific constraints). Validation runs as part of the ETL pipeline and produces quality scorecards stored in the metadata catalog. Alerts are triggered when quality metrics fall below configurable thresholds.",
+        "source": "internal-wiki/data-quality",
+        "tags": [
+            "data-quality",
+            "validation",
+            "etl",
+            "monitoring"
+        ]
+    },
+    {
+        "id": "eng-005",
+        "title": "Model Registry and Deployment Workflow",
+        "content": "Models are registered in MLflow with automated experiment tracking. The deployment workflow follows a promote-through-environments pattern: development → staging → production. Each promotion requires passing a suite of validation tests including accuracy benchmarks, latency SLAs, and bias audits. Canary deployments route 5% of traffic to new model versions before full rollout.",
+        "source": "internal-wiki/mlops",
+        "tags": [
+            "mlflow",
+            "deployment",
+            "canary",
+            "model-registry"
+        ]
+    }
+]

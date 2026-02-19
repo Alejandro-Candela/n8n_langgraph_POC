@@ -1,0 +1,57 @@
+[
+    {
+        "query": "What is the architecture of our ML inference pipeline?",
+        "expected_route": "silo_a",
+        "expected_keywords": [
+            "gRPC",
+            "TensorRT",
+            "inference",
+            "pipeline"
+        ],
+        "reference_answer": "The ML inference pipeline follows a three-stage architecture with gRPC endpoints backed by TensorRT."
+    },
+    {
+        "query": "What patents exist for real-time audio classification on edge devices?",
+        "expected_route": "silo_b",
+        "expected_keywords": [
+            "audio",
+            "edge",
+            "neural",
+            "depthwise separable"
+        ],
+        "reference_answer": "Patent US-2024-0112233 describes a neural architecture with depthwise separable convolutions and attention mechanisms for edge audio classification."
+    },
+    {
+        "query": "How does our feature store compare to patented distributed feature engineering approaches?",
+        "expected_route": "both",
+        "expected_keywords": [
+            "feature store",
+            "Delta Lake",
+            "distributed",
+            "lazy materialization"
+        ],
+        "reference_answer": "Our feature store uses Delta Lake (offline) and Redis (online). Patent EP-3987654 proposes lazy materialization with configurable caching."
+    },
+    {
+        "query": "What data quality monitoring approaches do we use internally versus what's been patented?",
+        "expected_route": "both",
+        "expected_keywords": [
+            "data quality",
+            "validation",
+            "anomaly detection",
+            "KL-divergence"
+        ],
+        "reference_answer": "Internally we use KL-divergence for drift detection. Patent WO-2024-019876 proposes Isolation Forest + Autoencoder ensemble approaches."
+    },
+    {
+        "query": "How are models deployed and versioned in our organization?",
+        "expected_route": "silo_a",
+        "expected_keywords": [
+            "MLflow",
+            "canary",
+            "deployment",
+            "model registry"
+        ],
+        "reference_answer": "Models are registered in MLflow with promote-through-environments workflow and 5% canary deployments."
+    }
+]

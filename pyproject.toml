@@ -1,0 +1,62 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["langgraph_service"]
+
+[project]
+name = "hybrid-knowledge-synthesizer"
+version = "0.1.0"
+description = "Multi-agent LangGraph system for hybrid RAG across Databricks Vector Search and Azure AI Search, orchestrated by n8n"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+
+dependencies = [
+    # LangGraph & LangChain
+    "langgraph>=0.4",
+    "langchain-openai>=0.3",
+    "langchain-core>=0.3",
+    "langsmith>=0.2",
+    # API Server
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    # Azure
+    "azure-search-documents>=11.6",
+    "azure-identity>=1.19",
+    # Databricks
+    "databricks-sdk>=0.40",
+    # Config & Utils
+    "pydantic-settings>=2.7",
+    "python-dotenv>=1.0",
+    "httpx>=0.28",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "ruff>=0.9",
+]
+eval = [
+    "ragas>=0.2",
+    "datasets>=3.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+markers = [
+    "unit: Unit tests (no external dependencies)",
+    "integration: Integration tests (may require Docker services)",
+    "e2e: End-to-end tests (requires all services running)",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "SIM"]
