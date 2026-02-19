@@ -42,6 +42,8 @@ services:
     restart: unless-stopped
     depends_on:
       - n8n
+    volumes:
+      - ./langgraph_service:/app/langgraph_service:rw
 
 volumes:
   n8n_data:

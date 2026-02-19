@@ -107,13 +107,13 @@ resource "azurerm_cognitive_deployment" "gpt4o_mini" {
 }
 
 resource "azurerm_cognitive_deployment" "embedding" {
-  name                 = "text-embedding-3-small"
+  name                 = "text-embedding-ada-002"
   cognitive_account_id = azurerm_cognitive_account.openai.id
 
   model {
     format  = "OpenAI"
-    name    = "text-embedding-3-small"
-    version = "1"
+    name    = "text-embedding-ada-002"
+    version = "2"
   }
 
   sku {

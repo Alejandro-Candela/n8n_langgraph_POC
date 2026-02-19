@@ -43,7 +43,6 @@ def get_embeddings_model() -> AzureOpenAIEmbeddings:
         openai_api_version=settings.azure_openai_api_version,
         azure_endpoint=settings.azure_openai_endpoint,
         api_key=settings.azure_openai_api_key,
-        dimensions=settings.embedding_dimensions,
     )
 
 
@@ -157,12 +156,18 @@ def main() -> None:
     # Initialize Embeddings
     embeddings = get_embeddings_model()
 
-    # Create index
+    # Create index (Delete first to ensure schema update)
     credential = AzureKeyCredential(settings.azure_search_api_key)
     index_client = SearchIndexClient(
         endpoint=settings.azure_search_endpoint,
         credential=credential,
     )
+    try:
+        index_client.delete_index(settings.azure_search_index_name)
+        logger.info("🗑️  Deleted existing index '%s'", settings.azure_search_index_name)
+    except Exception:
+        pass  # Index might not exist
+
     create_index(index_client, settings.azure_search_index_name)
 
     # Upload documents

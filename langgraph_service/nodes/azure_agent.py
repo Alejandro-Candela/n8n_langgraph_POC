@@ -45,7 +45,16 @@ def _query_azure_search(query: str) -> tuple[str, list[str]]:
     """
     from azure.core.credentials import AzureKeyCredential
     from azure.search.documents import SearchClient
-    from azure.search.documents.models import VectorizableTextQuery
+    from azure.search.documents.models import VectorizedQuery
+    from langchain_openai import AzureOpenAIEmbeddings
+
+    # Initialize embeddings model
+    embeddings_model = AzureOpenAIEmbeddings(
+        azure_deployment=settings.azure_openai_embedding_deployment,
+        openai_api_version=settings.azure_openai_api_version,
+        azure_endpoint=settings.azure_openai_endpoint,
+        api_key=settings.azure_openai_api_key,
+    )
 
     search_client = SearchClient(
         endpoint=settings.azure_search_endpoint,
@@ -55,9 +64,12 @@ def _query_azure_search(query: str) -> tuple[str, list[str]]:
 
     for attempt in range(1, MAX_RETRIES + 1):
         try:
+            # Generate embedding for the query
+            vector = embeddings_model.embed_query(query)
+
             # Hybrid search: combines keyword + vector search
-            vector_query = VectorizableTextQuery(
-                text=query,
+            vector_query = VectorizedQuery(
+                vector=vector,
                 k_nearest_neighbors=5,
                 fields="text_vector",
             )
