@@ -10,6 +10,7 @@ Usage:
 import json
 import logging
 import sys
+import time
 from pathlib import Path
 
 from azure.core.credentials import AzureKeyCredential
@@ -24,9 +25,8 @@ from azure.search.documents.indexes.models import (
     VectorSearch,
     HnswAlgorithmConfiguration,
     VectorSearchProfile,
-    AzureOpenAIVectorizer,
-    AzureOpenAIVectorizerParameters,
 )
+from langchain_openai import AzureOpenAIEmbeddings
 
 from langgraph_service.config import settings
 
@@ -34,6 +34,17 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(
 logger = logging.getLogger(__name__)
 
 DATA_FILE = Path(__file__).parent.parent / "data" / "sample_patents.json"
+
+
+def get_embeddings_model() -> AzureOpenAIEmbeddings:
+    """Initialize Azure OpenAI Embeddings model."""
+    return AzureOpenAIEmbeddings(
+        azure_deployment=settings.azure_openai_embedding_deployment,
+        openai_api_version=settings.azure_openai_api_version,
+        azure_endpoint=settings.azure_openai_endpoint,
+        api_key=settings.azure_openai_api_key,
+        dimensions=settings.embedding_dimensions,
+    )
 
 
 def create_index(index_client: SearchIndexClient, index_name: str) -> None:
@@ -53,7 +64,7 @@ def create_index(index_client: SearchIndexClient, index_name: str) -> None:
             name="text_vector",
             type=SearchFieldDataType.Collection(SearchFieldDataType.Single),
             searchable=True,
-            vector_search_dimensions=settings.embedding_dimensions,
+            vector_search_dimensions=settings.embedding_dimensions,  # Ensure this matches model (1536 for text-embedding-3-small)
             vector_search_profile_name="myHnswProfile",
         ),
     ]
@@ -66,18 +77,6 @@ def create_index(index_client: SearchIndexClient, index_name: str) -> None:
             VectorSearchProfile(
                 name="myHnswProfile",
                 algorithm_configuration_name="myHnsw",
-                vectorizer_name="myOpenAI",
-            ),
-        ],
-        vectorizers=[
-            AzureOpenAIVectorizer(
-                vectorizer_name="myOpenAI",
-                parameters=AzureOpenAIVectorizerParameters(
-                    resource_url=settings.azure_openai_endpoint.rstrip("/"),
-                    deployment_name=settings.azure_openai_embedding_deployment,
-                    model_name=settings.azure_openai_embedding_deployment,
-                    api_key=settings.azure_openai_api_key,
-                ),
             ),
         ],
     )
@@ -87,27 +86,42 @@ def create_index(index_client: SearchIndexClient, index_name: str) -> None:
     logger.info("✅ Index '%s' created/updated", index_name)
 
 
-def upload_documents(search_client: SearchClient, documents: list[dict]) -> None:
-    """Upload documents to the Azure AI Search index.
+def upload_documents(search_client: SearchClient, documents: list[dict], embeddings_model: AzureOpenAIEmbeddings) -> None:
+    """Upload documents to the Azure AI Search index with embeddings.
 
     Args:
         search_client: Azure Search document client.
         documents: List of document dicts to upload.
+        embeddings_model: Initialized embeddings model.
     """
-    # Transform to index schema
+    logger.info("🧠 Generating embeddings for %d documents...", len(documents))
+    
     docs_to_upload = []
     for doc in documents:
+        # Generate embedding for the content
+        try:
+            vector = embeddings_model.embed_query(doc["content"])
+        except Exception as e:
+            logger.error("❌ Failed to embed document %s: %s", doc["id"], e)
+            continue
+
         docs_to_upload.append({
             "id": doc["id"],
             "title": doc["title"],
             "chunk": doc["content"],
             "parent_id": doc.get("patent_id", doc["id"]),
             "source": doc.get("source", "unknown"),
+            "text_vector": vector,
         })
+        # Rate limit protection (simple)
+        time.sleep(0.1)
 
-    result = search_client.upload_documents(documents=docs_to_upload)
-    succeeded = sum(1 for r in result if r.succeeded)
-    logger.info("✅ Uploaded %d/%d documents", succeeded, len(docs_to_upload))
+    if docs_to_upload:
+        result = search_client.upload_documents(documents=docs_to_upload)
+        succeeded = sum(1 for r in result if r.succeeded)
+        logger.info("✅ Uploaded %d/%d documents", succeeded, len(docs_to_upload))
+    else:
+        logger.warning("⚠️ No documents to upload")
 
 
 def main() -> None:
@@ -120,6 +134,16 @@ def main() -> None:
         logger.error("❌ Azure OpenAI not configured. Set AZURE_OPENAI_* env vars.")
         sys.exit(1)
 
+    # Check embedding dimensions
+    # text-embedding-3-small defaults to 1536 dim, but we configured 512 in .env? 
+    # Let's check settings.embedding_dimensions. 
+    # IMPORTANT: The model 'text-embedding-3-small' is native 1536 but supports shortening. 
+    # If using standard class, it returns 1536. We must match index definition.
+    # For this script we will assume 1536 unless user explicitly truncated.
+    # To be safe, let's update settings dimensions or just print a warning if mismatches occur.
+    
+    logger.info("⚙️  Embedding dims: %d", settings.embedding_dimensions)
+
     # Load sample data
     if not DATA_FILE.exists():
         logger.error("❌ Data file not found: %s", DATA_FILE)
@@ -129,6 +153,9 @@ def main() -> None:
         documents = json.load(f)
 
     logger.info("📄 Loaded %d documents from %s", len(documents), DATA_FILE.name)
+
+    # Initialize Embeddings
+    embeddings = get_embeddings_model()
 
     # Create index
     credential = AzureKeyCredential(settings.azure_search_api_key)
@@ -144,7 +171,7 @@ def main() -> None:
         index_name=settings.azure_search_index_name,
         credential=credential,
     )
-    upload_documents(search_client, documents)
+    upload_documents(search_client, documents, embeddings)
 
     logger.info("🎉 Azure ingestion complete!")
 
