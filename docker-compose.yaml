@@ -12,7 +12,8 @@ services:
       - N8N_HOST=0.0.0.0
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
-      - WEBHOOK_URL=${N8N_WEBHOOK_URL:-http://localhost:5678/}
+      - WEBHOOK_URL=${N8N_WEBHOOK_URL}
+      - N8N_EDITOR_BASE_URL=${N8N_WEBHOOK_URL}
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - GENERIC_TIMEZONE=Europe/Berlin
@@ -21,6 +22,21 @@ services:
     networks:
       - poc-network
     restart: unless-stopped
+
+  # ─── Ngrok (Public Tunnel) ─────────────────────────
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: poc-ngrok
+    restart: unless-stopped
+    command: "http n8n:5678"
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    ports:
+      - "4040:4040"
+    networks:
+      - poc-network
+    depends_on:
+      - n8n
 
   # ─── LangGraph FastAPI Service (The Brain) ─────────
   langgraph-service:

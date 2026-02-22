@@ -1,88 +1,58 @@
 {
-    "name": "Telegram to LangGraph RAG (Polling)",
+    "name": "Telegram to LangGraph RAG",
     "nodes": [
         {
             "parameters": {
-                "rule": {
-                    "interval": [
-                        {
-                            "field": "seconds",
-                            "secondsInterval": 5
-                        }
-                    ]
-                }
+                "updates": [
+                    "message"
+                ],
+                "additionalFields": {}
             },
-            "id": "polling-trigger",
-            "name": "Poll every 5s",
-            "type": "n8n-nodes-base.cron",
-            "typeVersion": 1,
+            "id": "telegram-trigger",
+            "name": "Telegram Trigger",
+            "type": "n8n-nodes-base.telegramTrigger",
+            "typeVersion": 1.1,
             "position": [
                 240,
                 300
-            ]
-        },
-        {
-            "parameters": {
-                "url": "https://api.telegram.org/bothttp://localhost:5678/webhook-test/868cbeb1-5b45-4832-9d6c-d2f3d1350ae0/webhook/getUpdates",
-                "sendQuery": true,
-                "queryParameters": {
-                    "parameters": [
-                        {
-                            "name": "offset",
-                            "value": "={{ $json.update_id ? $json.update_id + 1 : 0 }}"
-                        },
-                        {
-                            "name": "timeout",
-                            "value": "1"
-                        },
-                        {
-                            "name": "allowed_updates",
-                            "value": "[\"message\"]"
-                        }
-                    ]
-                },
-                "options": {}
+            ],
+            "credentials": {
+                "telegramApi": {
+                    "id": "telegram-credentials",
+                    "name": "Telegram account"
+                }
             },
-            "id": "get-updates",
-            "name": "Get Updates",
-            "type": "n8n-nodes-base.httpRequest",
-            "typeVersion": 4.1,
-            "position": [
-                460,
-                300
-            ]
-        },
-        {
-            "parameters": {
-                "fieldToSplitOut": "result",
-                "options": {}
-            },
-            "id": "split-updates",
-            "name": "Split Updates",
-            "type": "n8n-nodes-base.itemLists",
-            "typeVersion": 1,
-            "position": [
-                680,
-                300
-            ]
+            "webhookId": "telegram-langgraph-webhook"
         },
         {
             "parameters": {
                 "conditions": {
-                    "string": [
+                    "options": {
+                        "caseSensitive": true,
+                        "leftValue": "",
+                        "typeValidation": "strict"
+                    },
+                    "conditions": [
                         {
-                            "value1": "={{ $json.message }}",
-                            "operation": "isNotEmpty"
+                            "id": "condition-has-text",
+                            "leftValue": "={{ $json.message.text }}",
+                            "rightValue": "",
+                            "operator": {
+                                "type": "string",
+                                "operation": "isNotEmpty"
+                            }
                         }
-                    ]
-                }
+                    ],
+                    "combinator": "and"
+                },
+                "options": {}
             },
-            "id": "filter-messages",
-            "name": "Filter Messages",
+            "id": "filter-text-only",
+            "name": "Has Text?",
             "type": "n8n-nodes-base.if",
-            "typeVersion": 1,
+            "typeVersion": 2.2,
             "position": [
-                900,
+                460,
                 300
             ]
         },
@@ -91,41 +61,78 @@
                 "method": "POST",
                 "url": "http://langgraph-service:8000/invoke",
                 "sendBody": true,
-                "contentType": "json",
-                "bodyParameters": {
-                    "parameters": [
-                        {
-                            "name": "query",
-                            "value": "={{ $json.message.text }}"
-                        }
-                    ]
-                },
-                "options": {}
+                "specifyBody": "json",
+                "jsonBody": "={{ JSON.stringify({ \"query\": $json.message.text }) }}",
+                "options": {
+                    "timeout": 60000
+                }
             },
             "id": "langgraph-invoke",
             "name": "Invoke LangGraph",
             "type": "n8n-nodes-base.httpRequest",
-            "typeVersion": 4.1,
+            "typeVersion": 4.2,
             "position": [
-                1120,
-                300
+                680,
+                280
             ]
         },
         {
             "parameters": {
-                "chatId": "={{ $node['Filter Messages'].json.message.chat.id }}",
-                "text": "={{ $json.answer }}",
+                "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+                "text": "={{ $json.answer || 'Lo siento, no pude procesar tu consulta.' }}",
                 "additionalFields": {
                     "parse_mode": "Markdown"
                 }
             },
-            "id": "telegram-reply",
-            "name": "Telegram Reply",
+            "id": "telegram-reply-ok",
+            "name": "Send Answer",
             "type": "n8n-nodes-base.telegram",
-            "typeVersion": 1.1,
+            "typeVersion": 1.2,
             "position": [
-                1340,
-                300
+                900,
+                280
+            ],
+            "credentials": {
+                "telegramApi": {
+                    "id": "telegram-credentials",
+                    "name": "Telegram account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+                "text": "⚠️ Ocurrió un error al procesar tu consulta. Inténtalo de nuevo más tarde.",
+                "additionalFields": {}
+            },
+            "id": "telegram-reply-error",
+            "name": "Send Error",
+            "type": "n8n-nodes-base.telegram",
+            "typeVersion": 1.2,
+            "position": [
+                900,
+                480
+            ],
+            "credentials": {
+                "telegramApi": {
+                    "id": "telegram-credentials",
+                    "name": "Telegram account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+                "text": "ℹ️ Solo puedo procesar mensajes de texto. Envía tu consulta como texto.",
+                "additionalFields": {}
+            },
+            "id": "telegram-reply-no-text",
+            "name": "Not Text Reply",
+            "type": "n8n-nodes-base.telegram",
+            "typeVersion": 1.2,
+            "position": [
+                680,
+                480
             ],
             "credentials": {
                 "telegramApi": {
@@ -136,44 +143,29 @@
         }
     ],
     "connections": {
-        "Poll every 5s": {
+        "Telegram Trigger": {
             "main": [
                 [
                     {
-                        "node": "Get Updates",
+                        "node": "Has Text?",
                         "type": "main",
                         "index": 0
                     }
                 ]
             ]
         },
-        "Get Updates": {
-            "main": [
-                [
-                    {
-                        "node": "Split Updates",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Split Updates": {
-            "main": [
-                [
-                    {
-                        "node": "Filter Messages",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Filter Messages": {
+        "Has Text?": {
             "main": [
                 [
                     {
                         "node": "Invoke LangGraph",
+                        "type": "main",
+                        "index": 0
+                    }
+                ],
+                [
+                    {
+                        "node": "Not Text Reply",
                         "type": "main",
                         "index": 0
                     }
@@ -184,12 +176,16 @@
             "main": [
                 [
                     {
-                        "node": "Telegram Reply",
+                        "node": "Send Answer",
                         "type": "main",
                         "index": 0
                     }
                 ]
             ]
         }
-    }
+    },
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "pinData": {}
 }

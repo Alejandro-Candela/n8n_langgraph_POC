@@ -6,5 +6,7 @@
 subscription_id     = "your-azure-subscription-id"
 location            = "swedencentral"
 resource_group_name = "rg-hybrid-poc"
+environment         = "poc"
+project             = "hybrid-knowledge-synthesizer"
 search_service_name = "hybrid-poc-search"     # Must be globally unique
 openai_account_name = "hybrid-poc-openai"     # Must be globally unique
