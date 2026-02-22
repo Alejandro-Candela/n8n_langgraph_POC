@@ -4,7 +4,15 @@ Uses pydantic-settings to validate all required config at startup,
 preventing runtime failures from missing credentials.
 """
 
+import re
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Patterns that indicate a value is a placeholder, not a real credential
+_PLACEHOLDER_RE = re.compile(
+    r"(your[-_]|changeme|replace[-_]?me|TODO|FIXME|example\.com|placeholder)",
+    re.IGNORECASE,
+)
 
 
 class Settings(BaseSettings):
@@ -34,6 +42,7 @@ class Settings(BaseSettings):
     databricks_token: str = ""
     databricks_vs_endpoint_name: str = ""
     databricks_vs_index_name: str = ""
+    databricks_timeout_seconds: int = 30  # Per-request timeout (was SDK default: 300s)
 
     # --- Observability ---
     azure_app_insights_connection_string: str | None = None
@@ -45,20 +54,25 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     embedding_dimensions: int = 512
 
+    @staticmethod
+    def _is_real_value(value: str) -> bool:
+        """Return True only if the value is non-empty and not a placeholder."""
+        return bool(value) and not _PLACEHOLDER_RE.search(value)
+
     @property
     def azure_openai_configured(self) -> bool:
-        """Check if Azure OpenAI credentials are set."""
-        return bool(self.azure_openai_endpoint and self.azure_openai_api_key)
+        """Check if Azure OpenAI credentials are real (not placeholders)."""
+        return self._is_real_value(self.azure_openai_endpoint) and self._is_real_value(self.azure_openai_api_key)
 
     @property
     def azure_search_configured(self) -> bool:
-        """Check if Azure AI Search credentials are set."""
-        return bool(self.azure_search_endpoint and self.azure_search_api_key)
+        """Check if Azure AI Search credentials are real (not placeholders)."""
+        return self._is_real_value(self.azure_search_endpoint) and self._is_real_value(self.azure_search_api_key)
 
     @property
     def databricks_configured(self) -> bool:
-        """Check if Databricks credentials are set."""
-        return bool(self.databricks_host and self.databricks_token)
+        """Check if Databricks credentials are real (not placeholders)."""
+        return self._is_real_value(self.databricks_host) and self._is_real_value(self.databricks_token)
 
     @property
     def langsmith_configured(self) -> bool:

@@ -26,7 +26,7 @@ Engineering Document: Signal Processing Module
 - Supports sampling rates from 8kHz to 48kHz with configurable window sizes.
 - Integrates with the ML pipeline via Apache Kafka for streaming inference."""
 
-MAX_RETRIES = 3
+MAX_RETRIES = 2
 RETRY_BACKOFF_BASE = 1.5  # seconds
 
 
@@ -43,11 +43,15 @@ def _query_databricks_vector_search(query: str) -> tuple[str, list[str]]:
         Exception: If the query fails after all retries.
     """
     from databricks.sdk import WorkspaceClient
+    from databricks.sdk.config import Config
 
-    w = WorkspaceClient(
+    cfg = Config(
         host=settings.databricks_host,
         token=settings.databricks_token,
     )
+    # Override the default 300s timeout to fail fast on unreachable hosts
+    w = WorkspaceClient(config=cfg)
+    w.config.http_timeout_seconds = settings.databricks_timeout_seconds
 
     for attempt in range(1, MAX_RETRIES + 1):
         try:
