@@ -1,0 +1,56 @@
+# ============================================
+# .dockerignore — Minimize build context
+# ============================================
+# Prevent secrets, dev artifacts, and infra
+# files from leaking into Docker image layers.
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Git
+.git/
+.gitignore
+
+# Infrastructure
+infra/
+*.tfstate*
+*.tfvars
+
+# Dev tooling
+.venv/
+.uv/
+.pytest_cache/
+__pycache__/
+*.py[cod]
+htmlcov/
+.coverage
+.ruff_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Agent configs
+.agent/
+
+# Docker data (n8n volumes)
+n8n_data/
+
+# Documentation & non-runtime
+doc/
+data/
+reporting/
+scripts/
+tests/
+n8n/
+README.md
+*.md
+*.log
+
+# Docker files themselves
+Dockerfile
+docker-compose*.yaml

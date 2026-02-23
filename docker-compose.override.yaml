@@ -1,0 +1,33 @@
+# ============================================
+# docker-compose.override.yaml — Local Dev Only
+# ============================================
+# Automatically merged by `docker compose up`.
+# Contains ngrok tunnel, source bind-mounts,
+# and debug settings NOT suitable for production.
+#
+# This file is gitignored by default if sensitive,
+# but safe to commit as it contains no secrets.
+# ============================================
+
+services:
+  # ─── Ngrok (Public Tunnel for local dev) ───────────
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: poc-ngrok
+    restart: unless-stopped
+    command: "http n8n:5678"
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN}
+    ports:
+      - "4040:4040"
+    networks:
+      - poc-network
+    depends_on:
+      - n8n
+
+  # ─── Dev overrides for langgraph-service ───────────
+  langgraph-service:
+    volumes:
+      - ./langgraph_service:/app/langgraph_service:rw
+    environment:
+      - LOG_LEVEL=DEBUG

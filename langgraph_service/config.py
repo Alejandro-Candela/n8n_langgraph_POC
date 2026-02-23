@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Patterns that indicate a value is a placeholder, not a real credential
 _PLACEHOLDER_RE = re.compile(
-    r"(your[-_]|changeme|replace[-_]?me|TODO|FIXME|example\.com|placeholder)",
+    r"(your[-_]|changeme|replace[-_]?me|TODO|FIXME|access|token|example\.com|placeholder)",
     re.IGNORECASE,
 )
 

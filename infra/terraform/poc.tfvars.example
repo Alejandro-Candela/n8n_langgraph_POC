@@ -10,3 +10,9 @@ environment         = "poc"
 project             = "hybrid-knowledge-synthesizer"
 search_service_name = "hybrid-poc-search"     # Must be globally unique
 openai_account_name = "hybrid-poc-openai"     # Must be globally unique
+
+# ── Container Apps ──────────────────────────────────
+acr_name                = "hybridpocreg"          # Must be globally unique, alphanumeric only
+container_app_name      = "ca-langgraph"
+container_app_image_tag = "latest"                 # Use commit SHA in CI/CD
+key_vault_name          = "kv-hybrid-poc"          # Must be globally unique

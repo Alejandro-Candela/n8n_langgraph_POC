@@ -53,3 +53,39 @@ variable "openai_account_name" {
   type        = string
   default     = "hybrid-poc-openai"
 }
+
+# ── Container Apps ──────────────────────────────────
+
+variable "acr_name" {
+  description = "Azure Container Registry name (must be globally unique, alphanumeric only)"
+  type        = string
+  default     = "hybridpocreg"
+
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9]{5,50}$", var.acr_name))
+    error_message = "acr_name must be 5-50 alphanumeric characters."
+  }
+}
+
+variable "container_app_name" {
+  description = "Name for the Container App hosting langgraph-service"
+  type        = string
+  default     = "ca-langgraph"
+}
+
+variable "container_app_image_tag" {
+  description = "Docker image tag to deploy (e.g. 'latest', 'v0.1.0', commit SHA)"
+  type        = string
+  default     = "latest"
+}
+
+variable "key_vault_name" {
+  description = "Azure Key Vault name (must be globally unique, 3-24 chars)"
+  type        = string
+  default     = "kv-hybrid-poc"
+
+  validation {
+    condition     = can(regex("^[a-zA-Z][a-zA-Z0-9-]{1,22}[a-zA-Z0-9]$", var.key_vault_name))
+    error_message = "key_vault_name must be 3-24 chars, start with letter, alphanumeric and hyphens only."
+  }
+}
